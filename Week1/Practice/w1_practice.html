@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html>
+  <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+  <title>Fruit Stock Data - (Week 1 Practice)</title>
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <style>
+    body {
+      font: 10px sans-serif;
+    }
+    .chart {
+      font-family: Arial, sans-serif;
+      font-size: 14px;
+    }
+    .barValues {
+      font-family: Arial, sans-serif;
+      font-size: 14px;
+      font-weight: bold;
+      vertical-align: middle;
+    }
+    .axis path, .axis line {
+      fill: none;
+      stroke: purple;
+      stroke-width: 2px;
+      shape-rendering: crispEdges;
+    }
+    .bar {
+      fill: mediumvioletred;
+      z-index: 1000;
+    }
+    .grid .tick {
+      stroke: lightgrey;
+      opacity: 0.7;
+      z-index: -1000;
+    }
+    .grid path {
+      stroke-width: 0;
+      z-index: -1000;
+    }
+  </style>
+
+  <!-- jQuery -->
+  <script type="text/javascript" src="/VisualAnalytics3djs/js/jquery.js"></script>
+  <!-- Bootstrap Core JavaScript -->
+  <script type="text/javascript" src="/VisualAnalytics3djs/js/bootstrap.min.js"></script>
+  <!-- D3.js -->
+  <script type="text/javascript" src="/VisualAnalytics3djs/js/d3.v3.js"></script>
+
+  <script type="text/javascript">
+    $(document).ready(function(){
+      // Data used for the visualization (hardcoded)
+//      var data=[{"Quantity":"45","fruits":"Watermelon"},{"Quantity":"100","fruits":"Apples"},{"Quantity":"60","fruits":"Pears"},{"Quantity":"135","fruits":"Grapes"},{"Quantity":"70","fruits":"Tangerines"},{"Quantity":"90","fruits":"Pomegranates"},{"Quantity":"50","fruits":"Oranges"}];
+
+      // Data used for the visualization (read from file)
+      d3.csv("w1_practice.csv", function(data) {
+        // Convert String variable to number
+        data.forEach(function(d) {
+          d.Quantity = +d.Quantity;
+        });
+
+        // We initialize basic display variables
+        var margin = {top: 60, right: 40, bottom: 40, left:120},
+            width = 800,
+            height = 600;
+
+        // Definition of the x scale: Quantity of each fruit (type linear)
+        var x = d3.scale.linear()
+          // This scale may take values from 0 to the maximum value present in the array
+          .domain([0, d3.max(data, function(d) { return +d.Quantity;})])
+          ///The visualization range for the x axis is from 0 to the width (minus the right and left margins)
+          .range([0, width - margin.left - margin.right]);
+
+        // Definition of the y scale: Kind of fruits we have in stock (type ordinal)
+        var y = d3.scale.ordinal() 
+          // This scale may take the values on the kind of fruits described in the array of data
+          .domain(Object.keys(data).map(function(k) {return data[k]["fruits"];}))
+          // The visualization range for the y axis is (inverse) from 0 to the height (minus the top and bottom margins)
+          // Writing the two values of the array in decreasing order we get the data 
+          // shown in the natural order as in the array: from the base of the chart to the top
+          .rangeBands([height - margin.top - margin.bottom, 0]);
+
+        // Once we have the scales defined, let's see the axis
+        // First we go with x-axis property
+        var xAxis = d3.svg.axis()
+            .scale(x)
+            // Ticks and values under the x-axis
+            .orient('bottom')
+            // Size of the tick in the axis
+            .tickSize(5)
+            // Distance from the tick to the labels
+            .tickPadding(8);
+
+        // And then, the y-axis
+        var yAxis = d3.svg.axis() /// Specification for yAxis
+            .scale(y)
+            // Ticks and values at the left of the y-axis
+            .orient('left') 
+            // Size of the tick in the axis
+            .tickSize(5)
+            // Distance from the tick to the labels
+            .tickPadding(8);
+
+        // We define the chart with a top svg element anchored to the stock-chart div
+        var svg = d3.select('#stock-chart').append('svg')
+            // Basic style for the chart
+            .attr('class', 'chart')
+            // Magnitudes of the chart: width and height
+            .attr('width', width)
+            .attr('height', height)
+            // The chart will contain a group of elements (not yet defined)
+            .append('g')
+            // We move the origin of the chart to the right and down in a left and top margins values
+            .attr('transform', 'translate(' + margin.left + ', ' + margin.top + ')');
+
+        // We append a new group of elements corresponding to the x-axis
+        svg.append('g')
+            // Style for the axis
+            .attr('class', 'axis') 
+            // Position vertically at the end of the chart (remember that y=0 is at the top of the screen)
+            .attr('transform', 'translate(0, ' + (height - margin.top - margin.bottom) + ')')
+            // Association between the group of elements and the x-Axis
+            .call(xAxis);
+
+        // We append a new group of elements corresponding to the y-axis
+        svg.append('g') 
+            // Style for the axis
+            .attr('class', 'axis')
+            // There's no need to move the y-axis, as it's located at the left side of the screen
+            // Association between the group of elements and the x-Axis
+            .call(yAxis); //Reference to yAxis
+
+        // Axis for x-grid: we only define the orientation
+        var xAxisGrid = d3.svg.axis() //// this is an additional xAxis scale for gridlines
+            .scale(x) // link to x scale
+            .orient('bottom'); /// important to keep orientation for the gridlines.
+
+        // We append a new group of elements corresponding to the x-grid
+        svg.append("g") /// append a group of grid lines         
+            // Style for the grid
+            .attr("class", "grid")
+            // Position vertically at the end of the chart (remember that y=0 is at the top of the screen)
+            .attr("transform", "translate(0," + (height - margin.bottom - margin.top)+")")
+            // Association between the group of elements and the Grid
+            .call(xAxisGrid
+              // TO-DO: Is there a way to dynamically calculate this???
+              .ticks(20)
+              // Tick size is the size of the chart
+              .tickSize(-(height-margin.top-margin.bottom), 0, 0)
+              // We supress the label of the grid axis, as they are shown in the x-axis
+              .tickFormat(""));
+
+        // Axis for y-grid: we only define the orientation
+        var yAxisGrid = d3.svg.axis()
+            .scale(y)
+            .orient('left');
+
+        // We append a new group of elements corresponding to the y-grid
+        svg.append("g")
+            .attr("class", "grid")
+            // Style for the grid
+            .call(yAxisGrid
+              //.ticks(20)
+              // Tick size is the size of the chart
+              .tickSize(-(width-margin.left-margin.right), 0, 0)
+              // We supress the label of the grid axis, as they are shown in the x-axis
+              .tickFormat(""));
+
+        // Finally, we build the chart, based on the class asigned
+        svg.selectAll('.chart')
+            // Assign the data to be used
+            .data(data)
+          // Opperations on the associated data
+          .enter()
+            // Add SVG rectangles to the chart
+            .append('rect')
+            // Style for the bars
+            .attr('class', 'bar')
+            // SVG Rectangles are defined with 4 mandatory variables
+            // Coordinates of the initial position: (x, y)
+            .attr('x', 0)
+            .attr('y', function(d) { return y(d.fruits)+y.rangeBand()/2 - 12.5 })
+            // Width and height of the rectangle
+            .attr('width', function(d) { return x(+d.Quantity) })
+            .attr('height', 25)
+            // And two optional variables to define the curvature of the rectangle 
+            // corners in both axis: rx, ry
+            .attr('rx', 10)
+            .attr('ry', 15);
+
+        // And define the values associated to the bars  
+        svg.selectAll(".rect")
+            // Assign the data to be used
+            .data(data) /// bind to data
+          // Opperations on the associated data
+          .enter()
+            // Add SVG text elements to the bar
+            .append("svg:text")
+            // Style for the bar Values
+            .attr('class', 'barValues')
+            // SVG Rectangles are defined with 3 mandatory variables
+            // Coordinates of the position: (x, y)
+            .attr("x", function(d) { return x(d.Quantity); })
+            .attr('y', function(d) { return y(d.fruits)+y.rangeBand()/2 - 12.5 })
+            // Text to visualize
+            .text(function(d) { return d.Quantity })
+            // And three optional variables to adjust the position: 
+            // Padding: (dx, dy) and alignment: text-anchor
+            .attr("dx", "0.5em")
+            // TO-DO: Is there a way to dynamically assign this value and vertically align the text with the bars
+            .attr("dy", "1.25em")
+            .attr("text-anchor", "right");
+
+        // Adding graph Title as a Text element in the middle of the top margin
+        svg.append("text")
+            .attr("x", (width / 2))             
+            .attr("y", 0 - (margin.top / 2))
+            .attr("text-anchor", "middle")  
+            .style("font-size", "20px") 
+            .text("Fruit Stock Chart");
+      });    
+    });
+  </script>
+</head>
+<body>
+	<div id="stock-chart"  style="position: relative; top: 3px; left: 20px;"></div>
+</body>
+</html>

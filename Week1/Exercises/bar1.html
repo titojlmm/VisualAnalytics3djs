@@ -29,7 +29,6 @@
     $(document).ready(function(){ /// jQuery function that starts JavaScript when DOM loads
     /// Data in JSON format. In this type of JSON variables before ":" are called keys, after semicolon are called values.
     var data = [{"date":"2015-01-20","total":3},{"date":"2015-01-21","total":8},{"date":"2015-01-22","total":2},{"date":"2015-01-23","total":10},{"date":"2015-01-24","total":3},{"date":"2015-01-25","total":20},{"date":"2015-01-26","total":12}];
-//    var data = [{"date":"20-01-2015","total":3},{"date":"21-01-2015","total":8},{"date":"22-01-2015","total":2},{"date":"23-01-2015","total":10},{"date":"24-01-2015","total":3},{"date":"25-01-2015","total":20},{"date":"26-01-2015","total":12}];
 
     var margin = {top: 40, right: 40, bottom: 40, left:40}, //// The concept of margins is best explained here: http://bl.ocks.org/mbostock/3019563
         width = 600, ///width and height of the SVG image 
@@ -73,7 +72,7 @@
         .attr('class', 'chart') /// Attach a CSS class (see styles above). This class can have any other name
         .attr('width', width) // a reference to width which was specified earlier in this file
         .attr('height', height) // a reference to height which was specified earlier in this file
-        .append('g') /// here we specify that the chart will conatin a group of elements
+        .append('g') /// here we specify that the chart will contain a group of elements
         .attr('transform', 'translate(' + margin.left + ', ' + margin.top + ')'); /// the position of the chart should start not at 0,0,but at 40,40.
 
     svg.selectAll('.chart') /// Here we select the CSS class chart. (Remember we assigned it earlier?)
@@ -92,8 +91,7 @@
          .attr("x", function(d) { return x(new Date(d.date)); }) // position
          .attr("y", function(d) { return y(d.total); })/// position of the text label
          .attr("dx", "0.5em") // padding-right
-         .attr("\
-dy", "1.50em") // padding-left
+         .attr("dy", "1.50em") // padding-left
          .attr("text-anchor", "left") // text-align: left
          .text(function(d) { return d.total }); /// Text
     });
