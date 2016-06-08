@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Course on D3.js - Week 1 - Debugging</title>
+    <script src="https://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+<!--
+Type in the following commands one after another. Watch what happens in your browser and Elements.
+d3.select("body").append('p').text('Hello d3!');
+d3.select("body p").text("Welcome to d3");
+var body = d3.select("body");
+body.append('div').attr('class','box')
+body.append('div').attr('class','box').text('hi')
+body.append('div').attr('class','box').text('foo')
+var my_data = [20, 7, 32]
+d3.selectAll('.box').data(my_data).text( function(d) { return d } );
+var String="Message!!!";
+d3.selectAll('.box').text( String );
+-->
+<style type="text/css">
+      .box {
+        background-color: skyblue;
+        width: 24px;
+        height: 18px;
+        padding: 4px;
+        margin: 1px;
+      }
+    </style>
+  </head>
+  <body>
+  </body>
+</html>
