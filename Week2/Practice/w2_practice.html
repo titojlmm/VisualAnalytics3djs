@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <title>streamgraph</title>
+
+  <style type='text/css'>
+    body {
+      font-family: "Arial";
+      position: relative;
+    }
+    .node {
+      stroke: #fff;
+      stroke-width: 1.5px;
+    }
+    .textnode {
+      font-size: small;
+      font-family: cursive;
+    }
+    .link {
+      stroke: #999;
+      stroke-opacity: .6;
+    }
+  </style>
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+</head>
+<body>
+  <script type='text/javascript' src="http://d3js.org/d3.v3.js"></script>
+
+  <script type='text/javascript'>
+    var width = 960,
+        height = 650,
+        margintop = 40;
+
+    var color = d3.scale.category10();
+
+    var force = d3.layout.force()
+        .charge(200)
+        .linkDistance(300)
+        .size([width, height]);
+
+    var svg = d3.select("body").append("svg")
+                .attr("width", width)
+                .attr("height", height);
+
+    svg.append("text")
+        .attr("x", (width / 2))             
+        .attr("y", margintop/2)
+        .attr("text-anchor", "middle")  
+        .style("font-size", "20px") 
+        .text("Coauthoring sample data");
+
+    d3.json("./w2_practiceNodes.json", function(error, graph) {
+      if (error) throw error;
+      
+      // Chart definition: force layout
+      force
+          .nodes(graph.nodes)
+          .links(graph.links)
+          .start();
+
+      // Computing the number of neighbourghs of each node (only once)
+      var vecinos = {};
+      graph.links.forEach(function (d) {
+        if (d.value && d.value > 0) {
+          if (!vecinos[d.source.index]) {
+            vecinos[d.source.index] = 1;
+          } else {
+            vecinos[d.source.index] = vecinos[d.source.index]+1;
+          }
+        }
+      });
+      // Aux function
+      function getPosition(idInv) {
+        var i = 0;
+        for (; i < graph.nodes.length; i++) {
+          if (idInv === graph.nodes[i]["id"]) {
+            break;
+          }
+        }
+        return i;
+      }
+      // Compute relative size of Node
+      function getSize(idInv) {
+        var size;
+        var position = getPosition(idInv);
+        numVecinos = vecinos[position];
+        if (!numVecinos || numVecinos===0) {
+          size = 5;
+        } else {
+          size = 5 + 3*numVecinos;
+        }
+        return size;
+      }
+      // Get color of the Node
+      function getColor(idInv) {
+        if (idInv.startsWith("invext")) {
+          return color(2);
+        } else if (idInv.startsWith("invant")) {
+          return color(4);
+        } else {
+          return color(6);
+        }
+      }
+
+      // Links data and properties
+      var link = svg.selectAll(".link")
+          .data(graph.links)
+        .enter()
+          .append("g")
+          .attr("class", "link")
+          .append("line")
+          .attr("class", "link")
+          .style("stroke-width", function(d) { return Math.sqrt(d.value); });
+
+      // Links text data and properties
+      var labelText = svg.selectAll(".link")
+        .append("text")
+        .attr("dx", 12)
+        .attr("dy", ".35em")
+        .attr("class", "textnode")
+      .text(function(d) { return d.value });
+
+      // General container of the nodes
+      var node = svg.selectAll(".node")
+          .data(graph.nodes)
+        .enter().append("g")
+        .on("mouseover", mouseover)
+        .on("mouseout", mouseout)
+        .call(force.drag);
+
+      // Show the nodes as coloured circles as the type of researcher
+      node.append("circle")
+        .attr("class", "node")
+        .attr("r", function(d) {return getSize(d.id)})
+        .style("fill", function(d) { return getColor(d.id); });
+      // Text label: name of researcher (coloured with the nodes)
+      node.append("text")
+        .attr("dx", 12)
+        .attr("dy", ".35em")
+        .style("fill", function(d) { return getColor(d.id); })
+        .attr("class", "textnode")
+        .text(function(d) { return d.name });
+      node.append("title")
+          .text(function(d) { return d.name; });
+
+      force.on("tick", function() {
+        link
+            .attr("x1", function(d) { return d.source.x; })
+            .attr("y1", function(d) { return d.source.y; })
+            .attr("x2", function(d) { return d.target.x; })
+            .attr("y2", function(d) { return d.target.y; });
+            
+        labelText
+            .attr("x", function(d) { return (d.source.x + d.target.x)/2; })
+            .attr("y", function(d) { return (d.source.y + d.target.y)/2; });
+    
+        node
+            .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
+      });
+
+function mouseover() {
+/*
+    d3.select(this).select("circle").transition()
+      .duration(750)
+      .attr("r", function(d) {
+        console.log(d);
+        console.log(this.r);
+        return 2*d});
+*/
+  null;
+}
+
+function mouseout() {
+/*
+  d3.select(this).select("circle").transition()
+      .duration(750)
+      .attr("r", 8);
+*/
+  null;
+}    
+    });
+  </script>
+</body>
+</html>

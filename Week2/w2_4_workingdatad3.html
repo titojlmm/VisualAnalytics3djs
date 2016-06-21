@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <title>streamgraph</title>
+  <script type='text/javascript' src='//code.jquery.com/jquery-1.9.1.js'></script>
+  <script type='text/javascript' src="http://d3js.org/d3.v3.js"></script>
+<!--
+  <script type='text/javascript' src="dsv.js"></script>
+-->
+  <style type='text/css'>
+    body {
+      font-family: "Arial";
+      position: relative;
+    }
+  </style>
+  
+  <script type='text/javascript'>
+    //<![CDATA[ 
+/*
+    var  lData=[];
+    var dsv = d3.dsv("~", "text/plain");
+    dsv("/VisualAnalytics3djs/Week2/w2_4_data.dsv", function(error, data) {
+      if (error) return console.warn(error);
+      lData=JSON.stringify(data);
+        console.log(lData);  
+    });  
+
+    var  lData=[];
+    d3.csv("/VisualAnalytics3djs/Week2/w2_4_data.dsv", function(data) {
+    lData=JSON.stringify(data);
+      console.log(lData);      
+    });
+
+    var lData=[];
+    d3.tsv("/VisualAnalytics3djs/Week2/w2_4_data.tsv", function(data) {
+    lData=JSON.stringify(data);
+      console.log(lData);     
+    });  
+
+    var data; // a global
+    d3.json("/VisualAnalytics3djs/Week2/w2_4_data.json", function(error, json) {
+      if (error) return console.warn(error);
+      data = json;
+      console.log(JSON.stringify(json[25]));
+    });   
+
+    function xmlToJSON2(xml) {
+        var o = { 'tagName': xml.tagName };
+        if (xml.attributes) {
+            o.attributes = [];
+            Array.prototype.forEach.call(xml.attributes, function (a) {
+                o.attributes[a.name] = a.value;
+            });
+        }
+        if (xml.textContent && xml.textContent.length) {
+            o['textContent'] = xml.textContent.trim();
+        }
+        if (xml.children.length) {
+            o.children = Array.prototype.map.call(xml.children, function (child) {
+                return xmlToJSON2(child);
+            });
+        }
+        return o;
+    }
+    d3.xml("/VisualAnalytics3djs/Week2/w2_4_data.xml", "application/xml", function(xml) {
+      console.log(JSON.stringify(xmlToJSON2(xml)));
+    });    
+*/
+    $(window).load(function(){
+      d3.json("/VisualAnalytics3djs/Week2/w2_4_researchdata.json", function(error, events) {
+        if (error) return console.warn(error);
+        var nest = d3.nest()
+          .key(function(d) { return d.year; }).sortKeys(d3.descending)
+          .key(function(d) { return d.country; }).sortKeys(d3.ascending)
+//          .key(function(d) { return d.N_INJURD; })
+          .rollup(function(leaves) { return leaves.length; })
+//          .rollup(function(leaves) {return {"N_INJURD": d3.sum(leaves, function(d) {return d.N_INJURD;})} })
+          .entries(events);
+        $("#graph_area").html(JSON.stringify(nest));
+    });
+    });
+  </script>
+</head>
+<body>
+  <p>File is loading...</p>
+  <div id="graph_area"></div>
+</body>
+</html>
