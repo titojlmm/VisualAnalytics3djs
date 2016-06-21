@@ -52,7 +52,7 @@
 //      var data=[{"Quantity":"45","fruits":"Watermelon"},{"Quantity":"100","fruits":"Apples"},{"Quantity":"60","fruits":"Pears"},{"Quantity":"135","fruits":"Grapes"},{"Quantity":"70","fruits":"Tangerines"},{"Quantity":"90","fruits":"Pomegranates"},{"Quantity":"50","fruits":"Oranges"}];
 
       // Data used for the visualization (read from file)
-      d3.csv("./w1_practice.csv", function(data) {
+      d3.csv("w1_practice.csv", function(data) {
         // Convert String variable to number
         data.forEach(function(d) {
           d.Quantity = +d.Quantity;
