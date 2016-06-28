@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+path {
+  stroke-linejoin: round;
+}
+.points{
+fill:black;		
+}
+.land {
+  fill: skyblue;
+}
+.states {
+  stroke: #fff;
+  fill:none;
+}
+</style>
+<body>
+<script src="http://d3js.org/d3.v3.js"></script>
+<script src="http://d3js.org/queue.v1.min.js"></script>
+<script src="http://d3js.org/topojson.v1.min.js"></script>
+<script>
+  var width = 960,
+      height = 500;
+
+  var projection = d3.geo.albers();
+
+  var path = d3.geo.path()
+      .projection(projection)
+      .pointRadius(1);
+
+  var svg = d3.select("body").append("svg")
+      .attr("width", width)
+      .attr("height", height);
+
+  queue()
+      .defer(d3.json, "us.json")
+      .defer(d3.tsv, "airports.tsv")
+      .await(ready);
+
+  function ready(error, us, airports) {
+    // map of the land
+    svg.append("path")
+        .datum(topojson.feature(us, us.objects.land))
+        .attr("class", "land")
+        .attr("d", path);      
+    
+    // add bounderies of the states
+    svg.append("g")
+        .attr("class", "states")
+        .selectAll("path")
+        .data(topojson.feature(us, us.objects.states).features)
+      .enter()
+        .append("path")
+        .attr("d", path);
+    
+    // add airport points
+    svg.append("path")
+        .datum({type: "MultiPoint", coordinates: airports})
+        .attr("class", "points")
+        .attr("d", path);
+  }
+</script>
+
+</body>
+</html>

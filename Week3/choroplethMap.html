@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+  path {
+    stroke-linejoin: round;
+  }
+  .points{
+  fill:black;		
+  }
+  .land {
+    fill: #ddd;
+  }
+  .states {
+    stroke: #fff;
+  }
+  .voronoi {
+    fill: none;
+    stroke: black;
+    stroke-width: 0.5px;
+  }
+</style>
+<body>
+<script src="http://d3js.org/d3.v3.js"></script>
+<script src="http://d3js.org/queue.v1.min.js"></script>
+<script src="http://d3js.org/topojson.v1.min.js"></script>
+<script>
+  var width = 960,
+      height = 500;
+
+  var data=[{"16":250, "53":87, "27":1, "38":89, "23":50,"26":53,"55":370,"30":160,"41":256, "46":187, "33":3, "50":89, "36":5,"56":180,"19":5,"31":30,"25":70,"17":256, "42":87, "9":8, "44":89, "6":500,"49":50,"32":70,"39":30,"18":256, "34":87, "8":8, "54":89, "29":50,"20":400,"10":70,"24":5,"21":70,"51":100,"11":256, "4":87, "40":8, "35":89, "47":50,"37":120,"48":256, "5":87, "45":8, "1":89, "13":50,"28":150,"22":256, "12":87, "15":8, "2":89, "72":50,"78":300}];
+  var color_scale = d3.scale.quantize()
+    .domain(d3.values(data[0]).sort(d3.ascending))
+    .range(["#fee5d9","#fcae91","#fb6a4a","#cb181d"]);
+
+  var projection = d3.geo.albers();
+
+  var path = d3.geo.path()
+    .projection(projection)
+    .pointRadius(1);
+
+  var svg = d3.select("body").append("svg")
+      .attr("width", width)
+      .attr("height", height);
+
+  queue()
+      .defer(d3.json, "us.json")
+//      .defer(d3.tsv, "airports.tsv")
+      .await(ready);
+
+  function ready(error, us) {
+//  function ready(error, us, airports) {
+    // map of the land
+    svg.append("path")
+        .datum(topojson.feature(us, us.objects.land))
+        .attr("class", "land")
+        .attr("d", path);      
+    
+    // add bounderies of the states
+    svg.append("g")
+        .attr("class", "states")
+        .selectAll("path")
+        .data(topojson.feature(us, us.objects.states).features)
+      .enter()
+        .append("path")
+        .attr("d", path)
+        .style("fill", function(d){return color_scale(data[0][d.id]);});
+/*    
+    // add airport points
+    svg.append("path")
+        .datum({type: "MultiPoint", coordinates: airports})
+        .attr("class", "points")
+        .attr("d", path);
+
+    // add voronoi graph
+    svg.append("path")
+      .datum(d3.geom.voronoi(airports.map(projection)))
+      .attr("class", "voronoi")
+      .attr("d", function(d) { return "M" + d.map(function(d) { return d.join("L"); }).join("ZM") + "Z"; });
+*/
+    var legend = svg.selectAll('g.legendEntry')
+        .data(color_scale.range().reverse())
+      .enter()
+        .append('g').attr('class', 'legendEntry');
+
+    legend
+      .append('rect')
+        .attr("x", width - 910)
+        .attr("y", function(d, i) {
+          return i * 20;
+        })
+        .attr("width", 10)
+        .attr("height", 10)
+        .style("stroke", "black")
+        .style("stroke-width", 1)
+        .style("fill", function(d){return d;});
+
+    legend
+      .append('text')
+        .attr("x", width - 895) //leave 5 pixel space after the <rect>
+        .attr("y", function(d, i) {
+          return i * 20;
+        })
+        .attr("dy", "0.8em") //place text one line *below* the x,y point
+        .text(function(d,i) {
+          var extent = color_scale.invertExtent(d);        
+          return Math.round(extent[0]) + " - " + Math.round(extent[1]);
+        });
+  }
+</script>
+
+</body>
+</html>

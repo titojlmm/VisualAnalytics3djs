@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+  .province {
+    stroke: #000;
+    stroke-dasharray: 2,2;
+    stroke-linejoin: round;
+  }
+  .link {
+    text-decoration: underline;
+    color: blue;
+    cursor: pointer;
+  }
+  .legend-header {
+    font-weight: bold;
+    font-size: 18px;
+    text-align: left;
+  }
+  .legend-text {
+    font-size: 14px;
+  }
+</style>
+<body>
+  <script src="http://d3js.org/d3.v3.js"></script>
+  <script src="http://d3js.org/queue.v1.min.js"></script>
+  <script src="http://d3js.org/topojson.v1.min.js"></script>
+  <script>
+    var arr = location.search.match(/graphType=([a-z]+)/)
+    var graphType = arr[1];
+    (function() {
+        var link = document.createElement('link');
+        link.type = 'image/x-icon';
+        link.rel = 'shortcut icon';
+        link.href = './favicon-'+graphType+'.ico';
+        document.getElementsByTagName('head')[0].appendChild(link);
+    }());
+    switch (graphType) {
+      case "temp":
+        var data=[{
+          "4":19.1, "32":19.2, "10":18.6, "13":18.2, "15":15.4, "18":18.2, "20":17.1,
+          "26":18.5, "19":14.0, "35":12.2, "39":15.5, "2":14.3, "14":13.1, "16":13.4,
+          "36":15.8, "6":11.0, "38":11.1, "30":12.2, "31":12.4, "33":11.0, "23":13.1,
+          "8":16.1, "24":15.0, "34":16.1, "12":18.6, "27":18.9, "3":18.3, "11":17.5,
+          "7":17.1, "9":16.3, "21":14.8, "25":12.0, "28":14.9, "29":14.8, "22":13.9,
+          "37":14.7, "17":13.5, "1":11.7, "5":13.3
+        }];
+        break;
+      case "rain":
+        var data=[{
+          "4":200, "32":539, "10":523, "13":605, "15":365, "18":525, "20":493,
+          "26":534, "19":480, "35":378, "39":322, "2":353, "14":501, "16":428,
+          "36":342, "6":416, "38":515, "30":372, "31":479, "33":512, "23":379,
+          "8":588, "24":342, "34":500, "12":849, "27":391, "3":311, "11":467,
+          "7":447, "9":551, "21":1014, "25":1052, "28":811, "29":1613, "22":405,
+          "37":1134, "17":1507, "1":742, "5":960
+        }];
+        break;
+      case "sun":
+        var data=[{
+          "4":108.0, "32":129.0, "10":130.8, "13":130.5, "15":121.1, "18":130.2, "20":127.2,
+          "26":109.1, "19":75.0, "35":79.8, "39":81.6, "2":94.5, "14":103.3, "16":105.0,
+          "36":101.5, "6":81.7, "38":83.0, "30":77.2, "31":68.5, "33":60.6, "23":89.5,
+          "8":70.4, "24":102.9, "34":68.3, "12":70.5, "27":77.7, "3":95.2, "11":80.6,
+          "7":109.1, "9":114.1, "21":48.6, "25":40.0, "28":56.6, "29":92.5, "22":58.1,
+          "37":33.6, "17":34.2, "1":25.8, "5":31.3
+        }];
+        break;
+    }
+    var width = 1000,
+        height = 820;
+
+    var color_scale = d3.scale.quantile()
+      .domain(d3.values(data[0]))
+      .range(['#fef0d9','#fdd49e','#fdbb84','#fc8d59','#e34a33','#b30000']);
+      
+/*
+Temp. (C) | Rain (mm) | Sun
+Madrid - 15 | 421 | 100.4
+Tenerife - 21.5 | 226 | 92
+Las Palmas - 21.1 | 151 | 70.9
+Santander - 14.5 * 1129 * 38.9
+Ciudad Real - 15.6 * 402 * 97.3
+Burgos - 10.7 * 546 * 55.1
+Palencia - 11.7 * 423 * 70.8
+Valladolid - 12.7 * 433 * 72.8
+Girona - 14.7 * 728 * 84.4
+Pamplona - 12.9 * 674 * 59.0
+Valencia - 18.3 * 475 * 93.2
+Mallorca - 16.5 * 411 * 70.6
+Murcia - 18.6 - 297 * 99.2
+*/
+
+    var svg = d3.select("body")
+      .append("svg")
+        .attr("width", width)
+        .attr("height", height);
+
+    queue()
+        .defer(d3.json, "es.json")
+//        .defer(d3.json, "Provincias_ETRS89_30N.json")
+        .await(ready);
+
+    function ready(error, es) {
+      // Administrative states of Spain
+      var provinces = topojson.feature(es, es.objects.provinces);
+
+      var projection = d3.geo.mercator()
+          .scale(2300)
+          .center([0, 40])
+          .translate([775, 220]);  
+
+      var path = d3.geo.path()
+          .projection(projection);
+      svg.selectAll(".province")
+          .data(provinces.features)
+        .enter()
+        .append("path")
+          .attr("class", "province")
+          .attr("d", path)
+          .style("fill", function(d){
+            return color_scale(data[0][d.properties.id]);}
+          );
+
+      var legend = svg.selectAll('g.legendEntry')
+          .data(color_scale.range())
+        .enter()
+          .append('g').attr('class', 'legend-text');
+
+      // No data legend
+      legend
+        .append('rect')
+          .attr("x", width - 950)
+          .attr("y", 180)
+          .attr("width", 10)
+          .attr("height", 10)
+          .style("stroke", "black")
+          .style("stroke-width", 1)
+          .style("fill", "black");
+      legend
+        .append('text')
+          .attr("x", width - 935) //leave 5 pixel space after the <rect>
+          .attr("y", 180)
+          .attr("dy", "0.8em") //place text one line *below* the x,y point
+          .text("No data")
+          .attr('class', 'legend-text');
+
+      // Data legend
+      legend
+        .append('rect')
+          .attr("x", width - 950)
+          .attr("y", function(d, i) {
+            return 200 + (i * 20);
+          })
+          .attr("width", 10)
+          .attr("height", 10)
+          .style("stroke", "black")
+          .style("stroke-width", 1)
+          .style("fill", function(d){return d;});
+      legend
+        .append('text')
+          .attr("x", width - 935) //leave 5 pixel space after the <rect>
+          .attr("y", function(d, i) {return 200 + (i * 20);})
+          .attr("dy", "0.8em") //place text one line *below* the x,y point
+          .text(function(d,i) {
+            var extent = color_scale.invertExtent(d); 
+            switch (graphType) {
+              case "temp":
+                return Math.round(extent[0]*100)/100 + " - " + Math.round(extent[1]*100)/100 + " (ºC)";
+                break;
+              case "rain":
+                return Math.round(extent[0]) + " - " + Math.round(extent[1]) + " (mm)";
+                break;
+              case "sun":
+                return Math.round(extent[0]*100)/100 + " - " + Math.round(extent[1]*100)/100 + " (days)";
+                break;
+            }
+          });
+
+        // Adding graph Title
+        svg.append("text")
+            .attr("x", width - 950)
+            .attr("y", 40)
+            .attr("text-anchor", "left")  
+            .style("font-size", "20px") 
+            .text("Spanish Meteorology Data (1990-2014)");
+        var varName = "";
+        switch (graphType) {
+          case "temp":
+            varName = "Anual Mean Temperature";
+            svg.append("text")
+              .attr("x", width - 950)
+              .attr("y", 80)
+              .attr('class', 'link')
+              .text("Change to Rain Data")
+              .on("click",function(d,i) { document.location.href='./spainMap.html?graphType=rain';});
+            svg.append("text")
+              .attr("x", width - 950)
+              .attr("y", 110)
+              .attr('class', 'link')
+              .text("Change to Sun Days Data")
+              .on("click",function(d,i) { document.location.href='./spainMap.html?graphType=sun';});
+            break;
+          case "rain":
+            varName = "Anual Total Rain";
+            svg.append("text")
+              .attr("x", width - 950)
+              .attr("y", 80)
+              .attr('class', 'link')
+              .text("Change to Temperature Data")
+              .on("click",function(d,i) { document.location.href='./spainMap.html?graphType=temp';});
+            svg.append("text")
+              .attr("x", width - 950)
+              .attr("y", 110)
+              .attr('class', 'link')
+              .text("Change to Sun Days Data")
+              .on("click",function(d,i) { document.location.href='./spainMap.html?graphType=sun';});
+            break;
+          case "sun":
+            varName = "Total Days of Sun";
+            svg.append("text")
+              .attr("x", width - 950)
+              .attr("y", 80)
+              .attr('class', 'link')
+              .text("Change to Temperature Data")
+              .on("click",function(d,i) { document.location.href='./spainMap.html?graphType=temp';});
+            svg.append("text")
+              .attr("x", width - 950)
+              .attr("y", 110)
+              .attr('class', 'link')
+              .text("Change to Rain Data")
+              .on("click",function(d,i) { document.location.href='./spainMap.html?graphType=rain';});
+            break;
+        }
+        svg.append("text")
+            .attr("x", width - 950)
+            .attr("y", 160)
+            .attr('class', 'legend-header')
+            .text(varName);
+    }
+  </script>
+</body>
+</html>
