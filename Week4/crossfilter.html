@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Crossfilter</title>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/dc/2.1.0-dev/dc.css" rel="stylesheet" type="text/css" />
+<style>
+
+@import url(http://fonts.googleapis.com/css?family=Yanone+Kaffeesatz:400,700);
+
+body {
+  font-family: "Helvetica Neue";
+  margin: 40px auto;
+  width: 960px;
+  min-height: 2000px;
+}
+
+#body {
+  position: relative;
+}
+
+footer {
+  padding: 2em 0 1em 0;
+  font-size: 12px;
+}
+
+h1 {
+  font-size: 96px;
+  margin-top: .3em;
+  margin-bottom: 0;
+}
+
+h1 + h2 {
+  margin-top: 0;
+}
+
+h2 {
+  font-weight: 400;
+  font-size: 28px;
+}
+
+h1, h2 {
+  font-family: "Yanone Kaffeesatz";
+  text-rendering: optimizeLegibility;
+}
+
+#body > p {
+  line-height: 1.5em;
+  width: 640px;
+  text-rendering: optimizeLegibility;
+}
+
+#charts {
+  padding: 10px 0;
+}
+
+.chart {
+  display: inline-block;
+  height: 151px;
+  margin-bottom: 20px;
+}
+
+.reset {
+  padding-left: 1em;
+  font-size: smaller;
+  color: #ccc;
+}
+
+.background.bar {
+  fill: #ccc;
+}
+
+.foreground.bar {
+  fill: steelblue;
+}
+
+.axis path, .axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.axis text {
+  font: 10px sans-serif;
+}
+
+.brush rect.extent {
+  fill: steelblue;
+  fill-opacity: .125;
+}
+
+.brush .resize path {
+  fill: #eee;
+  stroke: #666;
+}
+
+#hour-chart {
+  width: 260px;
+}
+
+#delay-chart {
+  width: 230px;
+}
+
+#distance-chart {
+  width: 420px;
+}
+
+#date-chart {
+  width: 920px;
+}
+
+#flight-list {
+  min-height: 1024px;
+}
+
+#flight-list .date,
+#flight-list .day {
+  margin-bottom: .4em;
+}
+
+#flight-list .flight {
+  line-height: 1.5em;
+  background: #eee;
+  width: 640px;
+  margin-bottom: 1px;
+}
+
+#flight-list .time {
+  color: #999;
+}
+
+#flight-list .flight div {
+  display: inline-block;
+  width: 100px;
+}
+
+#flight-list div.distance,
+#flight-list div.delay {
+  width: 160px;
+  padding-right: 10px;
+  text-align: right;
+}
+
+#flight-list .early {
+  color: green;
+}
+
+aside {
+  position: absolute;
+  left: 740px;
+  font-size: smaller;
+  width: 220px;
+}
+
+</style>
+
+<div id="body">
+
+
+<div id="charts">
+
+    <div id='chart-line-hitsperyear'>
+      <h4>Surveys by years</h4>
+    </div>
+   
+ 
+  <div id="chart-line-hitspermonth">
+    <h4>Surveys by months</h4>
+  </div>
+  <div id="chart-line-hitsperhour">
+    <h4>Surveys by hours</h4>
+  </div>
+  
+    <div id="chart-line-hitsperweek">
+    <h4>Surveys by days of the week</h4>
+  </div>
+<div id="chart-line-hitsperday_month">
+    <h4>Surveys by days of the month</h4>
+  </div>
+</div>
+
+
+
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.9.1/jquery.js" ></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js" ></script>
+
+<script type='text/javascript' src="http://d3js.org/d3.v3.js"></script>
+
+<script type='text/javascript' src="https://cdnjs.cloudflare.com/ajax/libs/crossfilter/1.3.12/crossfilter.min.js"></script>
+<script type='text/javascript' src="https://cdnjs.cloudflare.com/ajax/libs/dc/2.1.0-dev/dc.min.js"></script>
+<script>
+$(window).load(function(){
+//try {
+var data0=[];
+var parseDate = d3.time.format("%y");
+$.ajax({
+    async: false,
+    url: "timestamp.json",
+    dataType: "json",
+    success: function (js) {
+    data0 = js;
+    //console.log(js);
+    }
+});
+var data=crossfilter(data0);
+
+//var yearFormat = d3.time.format("%Y");
+var hitslineChart  = dc.lineChart("#chart-line-hitsperyear");   
+var year = data.dimension(function(d) { return d3.time.year(new Date(d.timestamp*1000)); });
+console.log(JSON.stringify(year));
+      var years = year.group().reduceCount();  
+console.log(JSON.stringify(years));
+
+	hitslineChart
+		.width(500).height(200)
+		.dimension(year)
+		.group(years) 
+	    .x(d3.time.scale().domain([new Date(2006,0,1), new Date(2014,7,18)]))
+        .xUnits(d3.time.years)
+		.yAxisLabel("Surveys per year")
+		.transitionDuration(500)
+        .filter();
+
+var mname=["Jan","Feb","Mar","Apr","May","June","July","Aug","Sep","Oct","Nov","Dec"];       
+var hitslineChartm = dc.rowChart("#chart-line-hitspermonth");
+var month_ = data.dimension(function (d) {
+        var month1_ = new Date(d.timestamp *1000).getMonth();
+        return month1_+"."+mname[month1_];
+    });
+    var months_ = month_.group().reduceCount();
+    
+ hitslineChartm.width(280)
+        .height(350)
+        .margins({top: 20, left: 0, right: 0, bottom: 20})
+        .dimension(month_)
+        .group(months_)
+        .ordinalColors(['#393b79', '#5254a3', '#6b6ecf', '#9c9ede', '#637939', '#8ca252', '#b5cf6b', '#cedb9c', '#8c6d31', '#bd9e39', '#e7ba52','#e7cb94', '#843c39', '#ad494a', '#d6616b'])
+        .label(function (d) {
+            return d.key.split(".")[1];
+        })
+        .title(function (d) {
+            return d.key.split(".")[1]+":"+d.value;
+        })
+        .elasticX(true)
+        .ordering(function(t){return Number(t.key.split(".")[0]);})
+        .xAxis().ticks(4);
+        
+       
+var hitslineCharth  = dc.lineChart("#chart-line-hitsperhour");   
+var hour_ = data.dimension(function(d) { return Math.round(new Date(d.timestamp).getHours()+new Date(d.timestamp).getMinutes()/60); });
+   var hours_ = hour_.group().reduceCount();  
+    var minDateh = "0";
+	var maxDateh = "24";
+	hitslineCharth
+		.width(500).height(200)
+		.dimension(hour_)
+		.group(hours_) 
+		.x(d3.scale.linear().domain([0,24]))
+        .yAxisLabel("Surveys per hour of the day")
+		.transitionDuration(500)
+        .filter();
+
+var dayOfWeekChart = dc.rowChart("#chart-line-hitsperweek");
+var dayOfWeek = data.dimension(function (d) {
+        var day_ = new Date(d.timestamp *1000).getDay();
+        var name=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+        return day_+"."+name[day_];
+    });
+    var dayOfWeekGroup = dayOfWeek.group().reduceCount();
+
+ dayOfWeekChart.width(280)
+        .height(250)
+        .margins({top: 20, left: 10, right: 10, bottom: 20})
+        .group(dayOfWeekGroup)
+        .dimension(dayOfWeek)
+        .ordinalColors(['#3182bd', '#6baed6', '#9ecae1', '#c6dbef', '#e6550d', '#fd8d3c', '#fdae6b'])
+        .label(function (d) {
+            return d.key.split(".")[1];
+        })
+        .title(function (d) {
+            return d.value;
+        })
+        .elasticX(true)
+        .xAxis().ticks(4);
+var dateFormat = d3.time.format("%d");
+
+var hitslineChartd  = dc.lineChart("#chart-line-hitsperday_month");   
+var date_ = data.dimension(function(d) { return dateFormat(new Date(d.timestamp *1000)); });
+   var dates_ = date_.group().reduceCount();  
+    var minDateh = "1";
+	var maxDateh = "31";
+	hitslineChartd
+		.width(500).height(200)
+		.dimension(date_)
+		.group(dates_) 
+	    .x(d3.scale.linear().domain([1,31]))
+        .yAxisLabel("Surveys per day of the month")
+		.transitionDuration(500)
+        .filter();
+
+	dc.renderAll();
+});
+
+</script>
+</body>
+
+</html>

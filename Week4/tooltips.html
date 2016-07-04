@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>D3: Mouseover Tooltip</title>
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js" ></script>
+<script type="text/javascript" src="http://d3js.org/d3.v3.js"></script>
+<style type="text/css">
+  #chart {
+      height: 360 px;
+      position: relative;
+      width: 360 px;
+  }
+  .tooltip {
+      background: #eee;
+      box-shadow: 0 0 5 px #999999;                                    
+      color: #333;
+      display: none;
+      font-size: 12 px;
+      left: 15 px;
+      padding: 10 px;
+      position: absolute;
+      text-align: center;
+      top: 10 px;
+      width: 80 px;
+      z-index: 10;
+  }
+  .legend {
+      font-size: 14 px;
+  }
+  rect {
+      stroke-width: 2;
+  }
+  .text {
+      font-family: sans - serif;
+      font-size: 12 px;
+      fill: black;
+  }  
+</style>        
+</head>
+<body>		
+<div id="chart"></div>
+<script>
+$(document).ready(function() {
+    var dataset = [{
+        label: 'CiU 27,83%',
+        count: 43
+    }, {
+        label: 'PSC 22,43%',
+        count: 33
+    }, {
+        label: 'PSUC 18,77%',
+        count: 25
+    }, {
+        label: 'UCD 10,61%',
+        count: 18
+    }, {
+        label: 'ERC 8,90%',
+        count: 14
+    }, {
+        label: 'PSA 2,67%',
+        count: 2
+    }];
+    var width = 595;
+    var margin = {
+        top: 30
+    };
+    var height = 350;
+    var radius = Math.min(width, height / 2);
+    var legendRectSize = 18;
+    var legendSpacing = 4;
+    var color = d3.scale.category10();
+    var svg = d3.select('#chart')
+        .append('svg')
+        .attr('width', width)
+        .attr('height', height + margin.top * 2)
+        .append('g')
+        .attr('transform', 'translate(' + (width / 2) +
+            ',' + ((height + margin.top * 2) / 2) + ')');
+    var arc = d3.svg.arc()
+        .outerRadius(radius);
+
+    var arc2 = d3.svg.arc()
+        .outerRadius(radius + 10);
+
+    var pie = d3.layout.pie()
+        .value(function(d) {
+            return d.count;
+        })
+        .sort(null);
+
+    var tooltip = d3.select('#chart')
+        .append('div')
+        .attr('class', 'tooltip');
+
+    var path = svg.selectAll('path')
+        .data(pie(dataset))
+        .enter()
+        .append('path')
+        .attr('d', arc)
+        .attr("text-anchor", "middle")
+        .text(function(d) {
+            return d.count;
+        })
+        .attr('fill', function(d, i) {
+            return color(d.data.label);
+        }).on('mouseover', function(d) {
+            svg.selectAll('path').transition()
+                .duration(200)
+                .attr("opacity", 0.2);
+            d3.select(this).transition()
+                .duration(200)
+                .attr("opacity", 1)
+                .attr('d', arc2);
+            tooltip.transition(d3.select(this).data())
+                .duration(200)
+                .style("opacity", 0.9)
+                .style("display", "block");
+            tooltip.html(d.data.label + "-" + d.data.count)
+                .style("left", (d3.event.pageX) + "px")
+                .style("top", (d3.event.pageY - 2) + "px");
+        }).on("mouseout", function(d) {
+            svg.selectAll('path').transition()
+                .duration(200)
+                .attr("opacity", 1)
+                .attr('d', arc);
+            tooltip.transition()
+                .duration(200)
+                .style("opacity", 0)
+                .style("display", "none");
+        });
+
+    var legend = svg.selectAll('.legend')
+        .data(color.domain())
+        .enter()
+        .append('g')
+        .attr('class', 'legend')
+        .attr('transform', function(d, i) {
+            var height = legendRectSize + legendSpacing;
+            var offset = height * color.domain().length / 2;
+            var horz = 10 * legendRectSize;
+            var vert = i * height - offset;
+            return 'translate(' + horz + ',' + vert + ')';
+        });
+    legend.append('rect')
+        .attr('width', legendRectSize)
+        .attr('height', legendRectSize)
+        .style('fill', color)
+        .style('stroke', color);
+
+    legend.append('text')
+        .attr('x', legendRectSize + legendSpacing)
+        .attr('y', legendRectSize - legendSpacing)
+        .text(function(d) {
+            return d;
+        });
+}); 
+
+</script>
+	</body>
+</html>
