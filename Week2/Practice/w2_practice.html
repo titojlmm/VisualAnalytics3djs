@@ -25,7 +25,7 @@
   <link rel="icon" type="image/x-icon" href="favicon.ico">
 </head>
 <body>
-  <script type='text/javascript' src="http://d3js.org/d3.v3.js"></script>
+  <script type='text/javascript' src="https://d3js.org/d3.v3.js"></script>
 
   <script type='text/javascript'>
     var width = 960,
@@ -50,7 +50,7 @@
         .style("font-size", "20px") 
         .text("Coauthoring sample data");
 
-    d3.json("./w2_practiceNodes.json", function(error, graph) {
+    d3.json("w2_practiceNodes.json", function(error, graph) {
       if (error) throw error;
       
       // Chart definition: force layout
